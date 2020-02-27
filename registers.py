@@ -114,4 +114,7 @@ if __name__ == '__main__' :
     print(registerFile)
 
     registerFile['t3'].write(4)
-    print(registerFile['t3'])
+    print(registerFile['x28']) #should print 4
+
+    registerFile['f3'].write(5.0)
+    print(registerFile['ft3']) #should print 5.0
