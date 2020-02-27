@@ -69,45 +69,38 @@ class IInstruction(Instruction) :
 
 opCodeMap = {}
 
-def concreteInstruction(cls) :
-    cls._instInit()
-    return cls
+#decorator for concrete instructions
+class concreteInstruction :
+    def __init__(self, opcode) :
+        self.opcode = opcode
 
-@concreteInstruction
+    def __call__(self, cls) :
+        opCodeMap[self.opcode] = cls
+
+@concreteInstruction('ADD')
 class AddInstruction(RInstruction) :
     def funcExec(self, s1, s2) :
         return s1 + s2
 
-    @classmethod
-    def _instInit(cls) :
-        opCodeMap['ADD'] = cls
-
-@concreteInstruction
+@concreteInstruction('SUB')
 class SubInstruction(RInstruction) :
     def funcExec(self, s1, s2) :
         return s1 - s2
 
-    @classmethod
-    def _instInit(cls) :
-        opCodeMap['SUB'] = cls        
-
-@concreteInstruction
+@concreteInstruction('MUL')
 class MulInstruction(RInstruction) :
     def funcExec(self, s1, s2) :
         return s1 * s2
 
-    @classmethod
-    def _instInit(cls) :
-        opCodeMap['MUL'] = cls        
-
-@concreteInstruction
+@concreteInstruction('DIV')
 class DivInstruction(RInstruction) :
     def funcExec(self, s1, s2) :
         return s1 // s2      
 
-    @classmethod
-    def _instInit(cls) :
-        opCodeMap['DIV'] = cls        
+@concreteInstruction('SLT')
+class SltInstruction(RInstruction) :
+    def funcExec(self, s1, s2) :
+        return 1 if s1 < s2 else 0
 
 ###### Parsing ######
 
