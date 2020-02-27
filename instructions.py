@@ -91,7 +91,7 @@ class IInstruction(Instruction) :
     def exec(self) :
         s1 = registerFile[self.src1].read()
         #cast imm to the type of the destination register
-        destReg = registerFile[self.dst]
+        destReg = registerFile[self.dst]    
         assert destReg.type == int, "Destination register is not an integer"
     
         imm = destReg.type(self.imm)
@@ -203,6 +203,32 @@ class SlliInstruction(IInstruction) :
 class SrliInstruction(IInstruction) :
     def funcExec(self, s1, imm) :
         return s1 >> (imm % 5)
+
+@concreteInstruction('LUI')
+class LuiInstruction(UInstruction) :
+    def funcExec(self, imm) :
+        return imm << 12
+
+# unimplemented instructions
+@concreteInstruction('AUIPC')
+class AuipcInstruction(UInstruction) :
+    pass
+
+@concreteInstruction('SLTIU')
+class SltiuInstruction(IInstruction) :
+    pass
+
+@concreteInstruction('SRAI')
+class SraiInstruction(IInstruction) :
+    pass
+
+@concreteInstruction('SLTU')
+class SltuInstruction(RInstruction) :
+    pass
+
+@concreteInstruction('SRA')
+class SraInstruction(RInstruction) :
+    pass
 
 ###### Parsing ######
 
