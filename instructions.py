@@ -20,10 +20,30 @@ class Instruction :
 
 #base class for u-type instructions
 class UInstruction(Instruction) :
+
+    @classmethod
+    def parse(cls, instr) :
+        match = re.match(r'(\w+) (\w+), (\w+)', instr)
+        return cls(match[2], match[3], match[1])
+
     def __init__(self, dst, imm, opcode) :
         super().__init__(opcode)
         self.dst = dst
         self.imm = imm
+
+    def exec(self) :
+        destReg = registerFile[self.dst]
+        assert destReg.type == int, "Destination must be integer register"
+
+        imm = int(self.imm)
+        assert (imm < (2 ** 20)), "Immediate must be less than 2^20"
+
+        d = self.funcExec(imm)
+
+        destReg.write(d)
+
+    def funcExec(self, imm) :
+        raise NotImplementedError("funcExec not implemented for u-type instruction " + self.opcode)
 
     def __str__(self) :
         return str(self.opcode + " " + self.dst + " " + self.imm)
@@ -72,9 +92,11 @@ class IInstruction(Instruction) :
         s1 = registerFile[self.src1].read()
         #cast imm to the type of the destination register
         destReg = registerFile[self.dst]
-        #destination register has to be an integer
-        assert(destReg.type ==
+        assert destReg.type == int, "Destination register is not an integer"
+    
         imm = destReg.type(self.imm)
+        assert (imm < (2 ** 12)), "Immediate value is too large; must fit in 12 bits"
+
         d = self.funcExec(s1, imm)
         destReg.write(d)
 
