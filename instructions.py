@@ -56,20 +56,40 @@ class RInstruction(Instruction) :
 
 #base class for i-type instructions
 class IInstruction(Instruction) :
+
+    @classmethod
+    def parse(cls, instr) :
+        match = re.match(r'(\w+) (\w+), (\w+), (\w+)', instr)
+        return cls(match[3], match[4], match[2], match[1])
+        
     def __init__(self, src1, imm, dst, opcode) :
         super().__init__(opcode)
         self.src1 = src1
         self.imm = imm
         self.dst = dst
 
+    def exec(self) :
+        s1 = registerFile[self.src1].read()
+        #cast imm to the type of the destination register
+        destReg = registerFile[self.dst]
+        #destination register has to be an integer
+        assert(destReg.type ==
+        imm = destReg.type(self.imm)
+        d = self.funcExec(s1, imm)
+        destReg.write(d)
+
+    def funcExec(self, s1, imm) :
+        raise NotImplementedError("funcExec not implemented for i-type instruction " + self.opcode)
+
     def __str__(self) :
         return str(self.opcode + " " + self.dst + " " + self.src1 + " " + self.imm)
 
 ###### Instructions ######
 
+#map opcodes (in text) to class associated with instruction
 opCodeMap = {}
 
-#decorator for concrete instructions
+#decorator for concrete instructions to set up opcdoe map
 class concreteInstruction :
     def __init__(self, opcode) :
         self.opcode = opcode
@@ -101,6 +121,66 @@ class DivInstruction(RInstruction) :
 class SltInstruction(RInstruction) :
     def funcExec(self, s1, s2) :
         return 1 if s1 < s2 else 0
+
+@concreteInstruction('AND')
+class AndInstruction(RInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 & s2
+
+@concreteInstruction('OR')
+class OrInstruction(RInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 | s2
+
+@concreteInstruction('XOR')
+class XorInstruction(RInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 ^ s2
+
+@concreteInstruction('SLL')
+class SllInstruction(RInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 << (s2 % 32)
+
+@concreteInstruction('SRL')
+class SrlInstruction(RInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 >> (s2 % 32)        
+
+@concreteInstruction('ADDI')
+class AddiInstruction(IInstruction) :
+    def funcExec(self, s1, imm) :
+        return s1 + imm
+
+@concreteInstruction('ANDI')
+class AndiInstruction(IInstruction) :
+    def funcExec(self, s1, imm) :
+        return s1 & imm
+
+@concreteInstruction('OR')
+class OriInstruction(IInstruction) :
+    def funcExec(self, s1, imm) :
+        return s1 | imm
+
+@concreteInstruction('XOR')
+class XoriInstruction(IInstruction) :
+    def funcExec(self, s1, imm) :
+        return s1 ^ imm
+
+@concreteInstruction('SLTI')
+class SltiInstruction(IInstruction) :
+    def funcExec(self, s1, imm) :
+        return 1 if s1 < imm else 0
+
+@concreteInstruction('SLLI')
+class SlliInstruction(IInstruction) :
+    def funcExec(self, s1, imm) :
+        return s1 << (imm % 5)
+
+@concreteInstruction('SRLI')
+class SrliInstruction(IInstruction) :
+    def funcExec(self, s1, imm) :
+        return s1 >> (imm % 5)
 
 ###### Parsing ######
 
@@ -135,7 +215,8 @@ def testExecList() :
     insts = [
         'ADD t4, t0, t1',
         'ADD t5, t2, t3',
-        'MUL t6, t4, t5'
+        'MUL t6, t4, t5',
+        'ADDI t7, t6, 23'
     ]
     ops = [parseInstruction(i) for i in insts]
     for o in ops :
@@ -144,6 +225,7 @@ def testExecList() :
     print(registerFile['t4'])
     print(registerFile['t5'])
     print(registerFile['t6'])
+    print(registerFile['t7'])
 
 if __name__ == '__main__' :
     testExecList()
