@@ -90,18 +90,22 @@ class ORInstruction(Instruction) :
         self.dst = dst
 
     @property 
-    def type(self) :
+    def srctype(self) :
+        raise NotImplementedError("Define type in the derived class!")
+
+    @property
+    def dsttype(self) :
         raise NotImplementedError("Define type in the derived class!")
 
     def exec(self) :
         src1reg = registerFile[self.src1]
-        assert src1reg.type == self.type, "Src 1 register is not " + str(self.type)
+        assert src1reg.type == self.srctype, "Src 1 register is not " + str(self.srctype)
         s1 = src1reg.read()
 
         d = self.funcExec(s1)
 
         destReg = registerFile[self.dst]    
-        assert destReg.type == self.type, "Destination register is not " + str(self.type)
+        assert destReg.type == self.dsttype, "Destination register is not " + str(self.dsttype)
 
         destReg.write(d)
 
@@ -114,14 +118,22 @@ class ORInstruction(Instruction) :
 #base class for integer 2-operand instructions
 class IORInstruction(ORInstruction) :
     @property
-    def type(self) :
+    def srctype(self) :
+        return int
+
+    @property
+    def dsttype(self) :
         return int
 
 #base class for fp 2-operand instructions
 class FORInstruction(ORInstruction) :
     @property
-    def type(self) :
-        return float        
+    def srctype(self) :
+        return float
+
+    @property
+    def dsttype(self) :
+        return float             
 
 #base class for r-type instructions
 class RInstruction(Instruction) :
@@ -401,13 +413,36 @@ class FeqInstruction(FCmpInstruction) :
     def funcExec(self, s1, s2) :
         return 1 if s1 == s2 else 0                
 
-#store FP immediate to register -- not actually part of RISC-V instruction set
+#### Custom instructions -- not actually part of RISC-V instruction set ####
+
+#store FP immediate to register
 @concreteInstruction('FIMM.S')
 class FimmInstruction(FUInstruction) :
     def funcExec(self, imm) :
         return imm
 
-# unimplemented instructions
+
+#move floating point to integer
+@concreteInstruction('FMOVI.S')
+class FmoviInstruction(FORInstruction) :
+    def funcExec(self, src1) :
+        return int(src1)
+
+    @property
+    def dsttype(self) :
+        return float
+
+#move integer to floating point
+@concreteInstruction('IMOVF.S')
+class ImovfInstruction(FORInstruction) :
+    def funcExec(self, src1) :
+        return float(src1)
+
+    @property
+    def srctype(self) :
+        return float
+
+#### unimplemented instructions ####
 @concreteInstruction('AUIPC')
 class AuipcInstruction(IUInstruction) :
     pass
