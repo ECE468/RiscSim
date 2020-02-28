@@ -64,7 +64,7 @@ class RInstruction(Instruction) :
 
     @property 
     def type(self) :
-        raise NotImplementedError("Define type in the base class!")
+        raise NotImplementedError("Define type in the derived class!")
 
     def exec(self) :
         src1reg = registerFile[self.src1]
@@ -168,6 +168,11 @@ class DivInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 // s2      
 
+@concreteInstruction('REM')
+class RemInstruction(IRInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 % s2
+
 @concreteInstruction('SLT')
 class SltInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
@@ -257,6 +262,26 @@ class SltuInstruction(IRInstruction) :
 
 @concreteInstruction('SRA')
 class SraInstruction(IRInstruction) :
+    pass
+
+@concreteInstruction('MULH')
+class MulhInstruction(IRInstruction) :
+    pass
+
+@concreteInstruction('MULHSU')
+class MulhsuInstruction(IRInstruction) :
+    pass
+
+@concreteInstruction('MULHU')
+class MulhuInstruction(IRInstruction) :
+    pass
+
+@concreteInstruction('DIVU')
+class DivuInstruction(IRInstruction) :
+    pass
+
+@concreteInstruction('REMU')
+class RemuInstruction(IRInstruction) :
     pass
 
 ###### Parsing ######
