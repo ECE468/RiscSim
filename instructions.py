@@ -60,7 +60,7 @@ class IUInstruction(UInstruction) :
     def dsttype(self) :
         return int
 
-    @UInstruction.imm.setter
+    @UInstruction.imm.setter # pylint: disable=no-member
     def imm(self, value) :
         new_imm = int(value)
         assert (new_imm < (2 ** 20)), "Immediate must be less than 2^20"
@@ -72,7 +72,7 @@ class FUInstruction(UInstruction) :
     def dsttype(self) :
         return float
 
-    @UInstruction.imm.setter
+    @UInstruction.imm.setter # pylint: disable=no-member
     def imm(self, value) :
         new_imm = float(value)
         self._imm = new_imm
