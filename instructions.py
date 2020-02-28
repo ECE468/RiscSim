@@ -5,11 +5,6 @@ import re
 class Instruction :
     def __init__(self, opcode) :
         self.opcode = opcode #name of opcode
-        self.src1 = None #ref to src1 register
-        self.src2 = None #ref to src2 register
-        self.dst = None #ref to destination register
-        self.imm = None #immediate value (if needed)
-        self.addr = None #label to jump to or label name
 
     #execute the instruction, including updating memory/registers as necessary
     #assumption: exec does not check dependences. This will be checked at other phases in the code
@@ -23,22 +18,33 @@ class UInstruction(Instruction) :
 
     @classmethod
     def parse(cls, instr) :
-        match = re.match(r'(\w+) (\w+), (\w+)', instr)
+        print(instr)
+        match = re.match(r'(\S+) (\S+), (\S+)', instr)
         return cls(match[2], match[3], match[1])
 
     def __init__(self, dst, imm, opcode) :
         super().__init__(opcode)
         self.dst = dst
+        self._imm = 0
         self.imm = imm
+
+    @property
+    def dsttype(self) :
+        raise NotImplementedError("Define type in derived class")
+
+    @property
+    def imm(self) :
+        return self._imm
+
+    @imm.setter
+    def imm(self, value) :
+        raise NotImplementedError("Define immediate setter in derived class")
 
     def exec(self) :
         destReg = registerFile[self.dst]
-        assert destReg.type == int, "Destination must be integer register"
+        assert destReg.type == self.dsttype, "Destination register is not " + str(self.dsttype)
 
-        imm = int(self.imm)
-        assert (imm < (2 ** 20)), "Immediate must be less than 2^20"
-
-        d = self.funcExec(imm)
+        d = self.funcExec(self.imm)
 
         destReg.write(d)
 
@@ -48,18 +54,39 @@ class UInstruction(Instruction) :
     def __str__(self) :
         return str(self.opcode + " " + self.dst + " " + self.imm)
 
-#base class for r-type instructions
-class RInstruction(Instruction) :
+#base class for u-type instruction with integer immediate
+class IUInstruction(UInstruction) :
+    @property
+    def dsttype(self) :
+        return int
 
+    @UInstruction.imm.setter
+    def imm(self, value) :
+        new_imm = int(value)
+        assert (new_imm < (2 ** 20)), "Immediate must be less than 2^20"
+        self._imm = new_imm
+
+#base class for u-type instruction with float immediate
+class FUInstruction(UInstruction) :
+    @property
+    def dsttype(self) :
+        return float
+
+    @UInstruction.imm.setter
+    def imm(self, value) :
+        new_imm = float(value)
+        self._imm = new_imm
+
+#base class for 2-operand instructions
+class ORInstruction(Instruction) :
     @classmethod
     def parse(cls, instr) :
-        match = re.match(r'(\w+) (\w+), (\w+), (\w+)', instr)
-        return cls(match[3], match[4], match[2], match[1])
+        match = re.match(r'(\S+) (\S+), (\S+)', instr)
+        return cls(match[3], match[2], match[1])
 
-    def __init__(self, src1, src2, dst, opcode) :
+    def __init__(self, src1, dst, opcode) :
         super().__init__(opcode)
         self.src1 = src1
-        self.src2 = src2
         self.dst = dst
 
     @property 
@@ -71,14 +98,66 @@ class RInstruction(Instruction) :
         assert src1reg.type == self.type, "Src 1 register is not " + str(self.type)
         s1 = src1reg.read()
 
+        d = self.funcExec(s1)
+
+        destReg = registerFile[self.dst]    
+        assert destReg.type == self.type, "Destination register is not " + str(self.type)
+
+        destReg.write(d)
+
+    def funcExec(self, s1) :
+        raise NotImplementedError("funcExec not implemented for 2-operand r-type instruction " + self.opcode)
+
+    def __str__(self) :
+        return str(self.opcode + " " + self.dst + " " + self.src1)    
+
+#base class for integer 2-operand instructions
+class IORInstruction(ORInstruction) :
+    @property
+    def type(self) :
+        return int
+
+#base class for fp 2-operand instructions
+class FORInstruction(ORInstruction) :
+    @property
+    def type(self) :
+        return float        
+
+#base class for r-type instructions
+class RInstruction(Instruction) :
+
+    @classmethod
+    def parse(cls, instr) :
+        match = re.match(r'(\S+) (\S+), (\S+), (\S+)', instr)
+        return cls(match[3], match[4], match[2], match[1])
+
+    def __init__(self, src1, src2, dst, opcode) :
+        super().__init__(opcode)
+        self.src1 = src1
+        self.src2 = src2
+        self.dst = dst
+
+    @property 
+    def srctype(self) :
+        raise NotImplementedError("Define type in the derived class!")
+
+    @property
+    def dsttype(self) :
+        raise NotImplementedError("Define type in the derived class!")
+
+    def exec(self) :
+        src1reg = registerFile[self.src1]
+        assert src1reg.type == self.srctype, "Src 1 register is not " + str(self.srctype)
+        s1 = src1reg.read()
+
         src2reg = registerFile[self.src2]
-        assert src2reg.type == self.type, "Src 2 register is not " + str(self.type)
+        assert src2reg.type == self.srctype, "Src 2 register is not " + str(self.srctype)
         s2 = src2reg.read()
 
         d = self.funcExec(s1, s2)
 
         destReg = registerFile[self.dst]    
-        assert destReg.type == self.type, "Destination register is not " + str(self.type)
+        assert destReg.type == self.dsttype, "Destination register is not " + str(self.dsttype)
 
         destReg.write(d)
 
@@ -91,14 +170,33 @@ class RInstruction(Instruction) :
 #base class for int r-type instructions
 class IRInstruction(RInstruction) :
     @property
-    def type(self) :
+    def srctype(self) :
         return int
+
+    @property
+    def dsttype(self) :
+        return int
+
 
 #base class for fp r-type instructions
 class FRInstruction(RInstruction) :
     @property
-    def type(self) :
+    def srctype(self) :
         return float
+
+    @property
+    def dsttype(self) :
+        return float
+
+#base class for fp comparison instructions
+class FCmpInstruction(RInstruction) :
+    @property
+    def srctype(self) :
+        return float
+
+    @property
+    def dsttype(self) :
+        return int
 
 #base class for i-type instructions
 class IInstruction(Instruction) :
@@ -239,13 +337,79 @@ class SrliInstruction(IInstruction) :
         return s1 >> (imm % 5)
 
 @concreteInstruction('LUI')
-class LuiInstruction(UInstruction) :
+class LuiInstruction(IUInstruction) :
     def funcExec(self, imm) :
         return imm << 12
 
+@concreteInstruction('MV')
+class MvInstruction(IORInstruction) :
+    def funcExec(self, s1) :
+        return s1
+
+@concreteInstruction('NOT')
+class NotInstruction(IORInstruction) :
+    def funcExec(self, s1) :
+        return ~s1
+
+@concreteInstruction('FADD.S')
+class FaddInstruction(FRInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 + s2
+
+@concreteInstruction('FSUB.S')
+class FsubInstruction(FRInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 - s2
+
+@concreteInstruction('FMUL.S')
+class FmulInstruction(FRInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 * s2
+
+@concreteInstruction('FDIV.S')
+class FdivInstruction(FRInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 / s2
+
+@concreteInstruction('FMIN.S')
+class FminInstruction(FRInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 if s1 < s2 else s2
+
+@concreteInstruction('FMAX.S')
+class FmaxInstruction(FRInstruction) :
+    def funcExec(self, s1, s2) :
+        return s1 if s1 > s2 else s2        
+
+@concreteInstruction('FSQRT.S')
+class FsqrtInstruction(FORInstruction) :
+    def funcExec(self, s1) :
+        return s1 ** 0.5
+
+@concreteInstruction('FLT.S')
+class FltInstruction(FCmpInstruction) :
+    def funcExec(self, s1, s2) :
+        return 1 if s1 < s2 else 0
+
+@concreteInstruction('FLE.S')
+class FleInstruction(FCmpInstruction) :
+    def funcExec(self, s1, s2) :
+        return 1 if s1 <= s2 else 0
+
+@concreteInstruction('FEQ.S')
+class FeqInstruction(FCmpInstruction) :
+    def funcExec(self, s1, s2) :
+        return 1 if s1 == s2 else 0                
+
+#store FP immediate to register -- not actually part of RISC-V instruction set
+@concreteInstruction('FIMM.S')
+class FimmInstruction(FUInstruction) :
+    def funcExec(self, imm) :
+        return imm
+
 # unimplemented instructions
 @concreteInstruction('AUIPC')
-class AuipcInstruction(UInstruction) :
+class AuipcInstruction(IUInstruction) :
     pass
 
 @concreteInstruction('SLTIU')
@@ -290,7 +454,7 @@ class RemuInstruction(IRInstruction) :
 #The instruction is a single instruction string
 def parseInstruction(inst) :
     base = inst.strip()
-    opcode = re.match(r'(\w+)', base)[0]
+    opcode = re.match(r'(\S+)', base)[0]
     return opCodeMap[opcode].parse(base)
 
 ####### Test #######
@@ -319,7 +483,11 @@ def testExecList() :
         'ADD t5, t2, t3',
         'MUL t6, t4, t5',
         'ADDI t7, t6, 23',
-        'LUI t8, 100'
+        'LUI t8, 100',
+        'FIMM.S f1, 2.5',
+        'FMUL.S f2, f1, f1',
+        'FSQRT.S f3, f2',
+        'FLT.S t10, f3, f2'
     ]
     ops = [parseInstruction(i) for i in insts]
     for o in ops :
@@ -330,6 +498,10 @@ def testExecList() :
     print(registerFile['t6'])
     print(registerFile['t7'])
     print(registerFile['t8'])
+    print(registerFile['f1'])
+    print(registerFile['f2'])
+    print(registerFile['f3'])  
+    print(registerFile['t10'])  
 
 if __name__ == '__main__' :
     testExecList()
