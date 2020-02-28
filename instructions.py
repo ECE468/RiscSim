@@ -62,17 +62,43 @@ class RInstruction(Instruction) :
         self.src2 = src2
         self.dst = dst
 
+    @property 
+    def type(self) :
+        raise NotImplementedError("Define type in the base class!")
+
     def exec(self) :
-        s1 = registerFile[self.src1].read()
-        s2 = registerFile[self.src2].read()
+        src1reg = registerFile[self.src1]
+        assert src1reg.type == self.type, "Src 1 register is not " + str(self.type)
+        s1 = src1reg.read()
+
+        src2reg = registerFile[self.src2]
+        assert src2reg.type == self.type, "Src 2 register is not " + str(self.type)
+        s2 = src2reg.read()
+
         d = self.funcExec(s1, s2)
-        registerFile[self.dst].write(d)
+
+        destReg = registerFile[self.dst]    
+        assert destReg.type == self.type, "Destination register is not " + str(self.type)
+
+        destReg.write(d)
 
     def funcExec(self, s1, s2) :
         raise NotImplementedError("funcExec not implemented for r-type instruction " + self.opcode)
 
     def __str__(self) :
         return str(self.opcode + " " + self.dst + " " + self.src1 + " " + self.src2)
+
+#base class for int r-type instructions
+class IRInstruction(RInstruction) :
+    @property
+    def type(self) :
+        return int
+
+#base class for fp r-type instructions
+class FRInstruction(RInstruction) :
+    @property
+    def type(self) :
+        return float
 
 #base class for i-type instructions
 class IInstruction(Instruction) :
@@ -89,7 +115,10 @@ class IInstruction(Instruction) :
         self.dst = dst
 
     def exec(self) :
-        s1 = registerFile[self.src1].read()
+        src1reg = registerFile[self.src1]
+        assert src1reg.type == int, "Src 1 register is not an integer"
+        s1 = src1reg.read()
+
         #cast imm to the type of the destination register
         destReg = registerFile[self.dst]    
         assert destReg.type == int, "Destination register is not an integer"
@@ -120,52 +149,52 @@ class concreteInstruction :
         opCodeMap[self.opcode] = cls
 
 @concreteInstruction('ADD')
-class AddInstruction(RInstruction) :
+class AddInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 + s2
 
 @concreteInstruction('SUB')
-class SubInstruction(RInstruction) :
+class SubInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 - s2
 
 @concreteInstruction('MUL')
-class MulInstruction(RInstruction) :
+class MulInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 * s2
 
 @concreteInstruction('DIV')
-class DivInstruction(RInstruction) :
+class DivInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 // s2      
 
 @concreteInstruction('SLT')
-class SltInstruction(RInstruction) :
+class SltInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return 1 if s1 < s2 else 0
 
 @concreteInstruction('AND')
-class AndInstruction(RInstruction) :
+class AndInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 & s2
 
 @concreteInstruction('OR')
-class OrInstruction(RInstruction) :
+class OIRInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 | s2
 
 @concreteInstruction('XOR')
-class XorInstruction(RInstruction) :
+class XoIRInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 ^ s2
 
 @concreteInstruction('SLL')
-class SllInstruction(RInstruction) :
+class SllInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 << (s2 % 32)
 
 @concreteInstruction('SRL')
-class SrlInstruction(RInstruction) :
+class SrlInstruction(IRInstruction) :
     def funcExec(self, s1, s2) :
         return s1 >> (s2 % 32)        
 
@@ -223,11 +252,11 @@ class SraiInstruction(IInstruction) :
     pass
 
 @concreteInstruction('SLTU')
-class SltuInstruction(RInstruction) :
+class SltuInstruction(IRInstruction) :
     pass
 
 @concreteInstruction('SRA')
-class SraInstruction(RInstruction) :
+class SraInstruction(IRInstruction) :
     pass
 
 ###### Parsing ######
@@ -264,7 +293,8 @@ def testExecList() :
         'ADD t4, t0, t1',
         'ADD t5, t2, t3',
         'MUL t6, t4, t5',
-        'ADDI t7, t6, 23'
+        'ADDI t7, t6, 23',
+        'LUI t8, 100'
     ]
     ops = [parseInstruction(i) for i in insts]
     for o in ops :
@@ -274,6 +304,7 @@ def testExecList() :
     print(registerFile['t5'])
     print(registerFile['t6'])
     print(registerFile['t7'])
+    print(registerFile['t8'])
 
 if __name__ == '__main__' :
     testExecList()
