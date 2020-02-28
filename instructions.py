@@ -1,4 +1,5 @@
 from registers import registerFile
+from memory import memory
 import re
 
 #base class for instructions
@@ -77,7 +78,7 @@ class FUInstruction(UInstruction) :
         new_imm = float(value)
         self._imm = new_imm
 
-#base class for 2-operand instructions
+#base class for 2-operand r-type instructions
 class ORInstruction(Instruction) :
     @classmethod
     def parse(cls, instr) :
@@ -135,7 +136,7 @@ class FORInstruction(ORInstruction) :
     def dsttype(self) :
         return float             
 
-#base class for r-type instructions
+#base class for 3-operand r-type instructions
 class RInstruction(Instruction) :
 
     @classmethod
@@ -245,12 +246,94 @@ class IInstruction(Instruction) :
     def __str__(self) :
         return str(self.opcode + " " + self.dst + " " + self.src1 + " " + self.imm)
 
+#base class for memory instruction
+class MemInstruction(Instruction) :
+
+    #LOAD: LW reg1, imm(reg2) : reg1 = *(reg2 + imm)
+    #STORE: SW reg1, imm(reg2) : *(reg2 + imm) = reg1
+
+    @classmethod
+    def parse(cls, instr) :
+        match = re.match(r'(\w+) (\w+), (\w+)\((\w+)\)', instr)
+        return cls(match[1], match[3], match[2], match[4])
+        
+    def __init__(self, reg1, reg2, imm, opcode) :
+        super().__init__(opcode)
+        self.reg1 = reg1
+        self.reg2 = reg2
+        self.imm = imm
+
+    def exec(self) :
+        raise NotImplementedError("Specialize exec in derived class")
+
+    def _calculateAddress(self) :
+        offset = int(self.imm)
+        assert (offset < 2 ** 12), "Offset too large"
+
+        base = registerFile[self.reg2].read()
+
+        return base + offset
+
+    def __str__(self) :
+        return str(self.opcode + " " + self.reg2 + " " + self.imm + "(" + self.reg1 + ")")
+    
+#base class for int/fp loads
+class LDInstruction(MemInstruction) :
+
+    def exec(self) :
+        #calculate address
+        addr = self._calculateAddress(self)
+
+        #perform load
+        val = self.funcExec(addr)
+
+        #store result into register
+        assert(type(val) == self.dsttype), "Value in memory not of type " + str(self.dsttype)
+
+        destReg = registerFile[self.reg1]
+
+        assert (destReg.type == self.dsttype), "Destination register not of type " + str(self.dsttype)
+
+        destReg.write(val)
+
+    def funcExec(self, addr) :
+        return memory[addr]
+
+    @property
+    def dsttype(self) :
+        raise NotImplementedError("Specialize type in derived class")
+
+#base class for int/fp stores
+class STInstruction(MemInstruction) :
+
+    def exec(self) :
+        #calculate address
+        addr = self._calculateAddress(self)
+
+        #get value from register
+        srcReg = registerFile[self.reg1]
+
+        assert (srcReg.type == self.srctype), "Source register not of type " + str(self.srctype)
+
+        val = srcReg.read()
+
+        #perform store
+        self.funcExec(addr, val)
+
+    def funcExec(self, addr, val) :
+        memory[addr] = val
+
+    @property
+    def srctype(self) :
+        raise NotImplementedError("Specialize type in derived class")
+
 ###### Instructions ######
 
 #map opcodes (in text) to class associated with instruction
 opCodeMap = {}
 
-#decorator for concrete instructions to set up opcdoe map
+#decorator for concrete instructions to set up opcode map
+
 class concreteInstruction :
     def __init__(self, opcode) :
         self.opcode = opcode
@@ -411,7 +494,32 @@ class FleInstruction(FCmpInstruction) :
 @concreteInstruction('FEQ.S')
 class FeqInstruction(FCmpInstruction) :
     def funcExec(self, s1, s2) :
-        return 1 if s1 == s2 else 0                
+        return 1 if s1 == s2 else 0        
+
+
+@concreteInstruction('LW')
+class LwInstruction(LDInstruction) :
+    @property
+    def dsttype(self) :
+        return int
+
+@concreteInstruction('SW')
+class SwInstruction(STInstruction) :
+    @property
+    def srctype(self) :
+        return int
+
+@concreteInstruction('FLW')
+class FlwInstruction(LDInstruction) :
+    @property
+    def dsttype(self) :
+        return float
+
+@concreteInstruction('FSW')
+class FswInstruction(STInstruction) :
+    @property
+    def srctype(self) :
+        return float
 
 #### Custom instructions -- not actually part of RISC-V instruction set ####
 
