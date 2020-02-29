@@ -53,7 +53,7 @@ class UInstruction(Instruction) :
         raise NotImplementedError("funcExec not implemented for u-type instruction " + self.opcode)
 
     def __str__(self) :
-        return str(self.opcode + " " + self.dst + " " + self.imm)
+        return str(self.opcode + " " + self.dst + " " + str(self.imm))
 
 #base class for u-type instruction with integer immediate
 class IUInstruction(UInstruction) :
@@ -255,7 +255,7 @@ class MemInstruction(Instruction) :
     @classmethod
     def parse(cls, instr) :
         match = re.match(r'(\w+) (\w+), (\w+)\((\w+)\)', instr)
-        return cls(match[1], match[3], match[2], match[4])
+        return cls(match[2], match[4], match[3], match[1])
         
     def __init__(self, reg1, reg2, imm, opcode) :
         super().__init__(opcode)
@@ -282,7 +282,7 @@ class LDInstruction(MemInstruction) :
 
     def exec(self) :
         #calculate address
-        addr = self._calculateAddress(self)
+        addr = self._calculateAddress()
 
         #perform load
         val = self.funcExec(addr)
@@ -308,7 +308,7 @@ class STInstruction(MemInstruction) :
 
     def exec(self) :
         #calculate address
-        addr = self._calculateAddress(self)
+        addr = self._calculateAddress()
 
         #get value from register
         srcReg = registerFile[self.reg1]
@@ -321,6 +321,7 @@ class STInstruction(MemInstruction) :
         self.funcExec(addr, val)
 
     def funcExec(self, addr, val) :
+        print("updating memory location: " + hex(addr))
         memory[addr] = val
 
     @property
@@ -621,6 +622,12 @@ def testExecList() :
     registerFile['t1'].write(4)
     registerFile['t2'].write(5)
     registerFile['t3'].write(6)
+
+    addr1 = 0x40000000
+    addr2 = 0x40000004
+    registerFile['a0'].write(addr1)
+    registerFile['a1'].write(addr2)
+
     insts = [
         'ADD t4, t0, t1',
         'ADD t5, t2, t3',
@@ -630,10 +637,15 @@ def testExecList() :
         'FIMM.S f1, 2.5',
         'FMUL.S f2, f1, f1',
         'FSQRT.S f3, f2',
-        'FLT.S t10, f3, f2'
+        'FLT.S t10, f3, f2',
+        'SW t8, 0(a0)',
+        'FSW f3, 0(a1)',
+        'LW t11, 0(a0)',
+        'FLW f4, 0(a1)'
     ]
     ops = [parseInstruction(i) for i in insts]
     for o in ops :
+        print(o)
         o.exec()
 
     print(registerFile['t4'])
@@ -645,6 +657,13 @@ def testExecList() :
     print(registerFile['f2'])
     print(registerFile['f3'])  
     print(registerFile['t10'])  
+
+    print("Memory at " + hex(addr1) + ": " + str(memory[addr1]))
+    print("Memory at " + hex(addr2) + ": " + str(memory[addr2]))
+
+    print(registerFile['t11'])  
+    print(registerFile['f4'])  
+
 
 if __name__ == '__main__' :
     testExecList()

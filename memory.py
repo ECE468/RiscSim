@@ -1,12 +1,14 @@
 class Memory(dict) :
-    #initialize memory by making clear what the valid segments are: .globals, .stack, .heap
+    #initialize memory by making clear what the valid segments are: .globals, .stack, .heap, .text
     #IMPORTANT: memory is not byte addressable -- can only be addressed at word granularity -- means we do not have to actually manage byte mapping
     #           and we don't have to worry about endianness
-    def __init__(self, globs = (0x20000000, 0x30000000), stack = (0x30000000, 0x40000000), heap = (0x40000000, 0x80000000)) :
+    #IMPORTANT: we do not actually allow reading/writing to the text space, but Memory keeps track of the address range since it's part of the memory configuration
+    def __init__(self, globs = (0x20000000, 0x30000000), stack = (0x30000000, 0x40000000), heap = (0x40000000, 0x80000000), text = (0x10000000, 0x20000000)) :
         super().__init__()
         self.globs = globs
         self.stack = stack
         self.heap = heap
+        self.text = text
 
     def __getitem__(self, key) :
         self.__validateAddress(key)
