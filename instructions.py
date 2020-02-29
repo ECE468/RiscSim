@@ -263,9 +263,6 @@ class MemInstruction(Instruction) :
         self.reg2 = reg2
         self.imm = imm
 
-    def exec(self) :
-        raise NotImplementedError("Specialize exec in derived class")
-
     def _calculateAddress(self) :
         offset = int(self.imm)
         assert (offset < 2 ** 12), "Offset too large"
@@ -327,6 +324,57 @@ class STInstruction(MemInstruction) :
     @property
     def srctype(self) :
         raise NotImplementedError("Specialize type in derived class")
+
+#base class for IO magic instructions
+class IOInstruction(Instruction) :
+
+    @classmethod
+    def parse(cls, instr) :
+        match = re.match(r'(\w+) (\w+)', instr)
+        return cls(match[2], match[1])
+
+    def __init__(self, reg, opcode) :
+        super().__init__(opcode)
+        self.reg = reg
+
+    def __str__(self) :
+        return str(self.opcode + " " + self.reg)
+
+#base class for reading stdin
+class InputInstruction(IOInstruction) :
+
+    def exec(self) :
+        dstreg = registerFile[self.reg]
+        assert dstreg.type == self.dsttype, "Reading into register of type " + str(dstreg.type) + " when expecting " + str(self.dsttype)
+
+        val = self.funcExec()
+
+        dstreg.write(val)
+
+    def funcExec(self) :
+        return self.dsttype(input())
+
+    @property
+    def dsttype(self) :
+        raise NotImplementedError("Implement in derived class")
+
+#base class for writing to stdout
+class OutputInstruction(IOInstruction) :
+
+    def exec(self) :
+        srcreg = registerFile[self.reg]
+        assert srcreg.type == self.srctype, "Writing register of type " + str(srcreg.type) + " when expecting " + str(self.srctype)
+
+        val = srcreg.read()
+
+        self.funcExec(val)
+
+    def funcExec(self, val) :
+        print (val)
+
+    @property
+    def srctype(self) :
+        raise NotImplementedError("Implement in derived class")
 
 ###### Instructions ######
 
@@ -551,6 +599,45 @@ class ImovfInstruction(FORInstruction) :
     def srctype(self) :
         return float
 
+#read integer from stdin
+@concreteInstruction('GETI')
+class GetiInstruction(InputInstruction) :
+    @property
+    def dsttype(self) :
+        return int
+
+#read float from stdin
+@concreteInstruction('GETF')
+class GetfInstruction(InputInstruction) :
+    @property
+    def dsttype(self) :
+        return float       
+
+@concreteInstruction('PUTI')
+class PutiInstruction(OutputInstruction) :
+    @property
+    def srctype(self) :
+        return int
+
+@concreteInstruction('PUTF')
+class PutfInstruction(OutputInstruction) :
+    @property
+    def srctype(self) :
+        return float        
+
+@concreteInstruction('PUTS')
+class PutsInstruction(IOInstruction) :
+    def __init__(self, reg, opcode) :
+        self.reg = reg
+        self.opcode = opcode
+
+    def exec(self) :
+        addr = registerFile[self.reg].read()
+        assert (addr >= memory.strings[0] and addr < memory.strings[1]), "Writing string from a bad address"
+
+        print(memory[addr])
+        
+
 #### unimplemented instructions ####
 @concreteInstruction('AUIPC')
 class AuipcInstruction(IUInstruction) :
@@ -628,6 +715,9 @@ def testExecList() :
     registerFile['a0'].write(addr1)
     registerFile['a1'].write(addr2)
 
+    memory[0x00000000] = "Hello World"
+    registerFile['a2'].write(0x00000000)
+
     insts = [
         'ADD t4, t0, t1',
         'ADD t5, t2, t3',
@@ -641,7 +731,12 @@ def testExecList() :
         'SW t8, 0(a0)',
         'FSW f3, 0(a1)',
         'LW t11, 0(a0)',
-        'FLW f4, 0(a1)'
+        'FLW f4, 0(a1)',
+        'PUTI t4',
+        'PUTF f4',
+        'GETI t4',
+        'GETF f1',
+        'PUTS a2'
     ]
     ops = [parseInstruction(i) for i in insts]
     for o in ops :

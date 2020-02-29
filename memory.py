@@ -1,14 +1,19 @@
 class Memory(dict) :
-    #initialize memory by making clear what the valid segments are: .globals, .stack, .heap, .text
+    #initialize memory by making clear what the valid segments are: .globals, .stack, .heap, .text, .strings
     #IMPORTANT: memory is not byte addressable -- can only be addressed at word granularity -- means we do not have to actually manage byte mapping
     #           and we don't have to worry about endianness
     #IMPORTANT: we do not actually allow reading/writing to the text space, but Memory keeps track of the address range since it's part of the memory configuration
-    def __init__(self, globs = (0x20000000, 0x30000000), stack = (0x30000000, 0x40000000), heap = (0x40000000, 0x80000000), text = (0x10000000, 0x20000000)) :
+    def __init__(self, globs = (0x20000000, 0x30000000), 
+                       stack = (0x30000000, 0x40000000), 
+                       heap = (0x40000000, 0x80000000), 
+                       text = (0x10000000, 0x20000000), 
+                       strings = (0x0000000, 0x10000000)) :
         super().__init__()
         self.globs = globs
         self.stack = stack
         self.heap = heap
         self.text = text
+        self.strings = strings
 
     def __getitem__(self, key) :
         self.__validateAddress(key)
@@ -30,7 +35,7 @@ class Memory(dict) :
 
         #key needs to be in a segment
         valid = False
-        for s in [self.globs, self.stack, self.heap] :
+        for s in [self.globs, self.stack, self.heap, self.strings] :
             if (key >= s[0] and key < s[1]) :
                 valid = True
         assert valid == True, "Address not in a mapped segment"
