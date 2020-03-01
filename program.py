@@ -1,6 +1,7 @@
 from instructions import parseInstruction
 import re
 from memory import memory
+from util import parseint
 
 class Program :
     def __init__(self) :
@@ -18,6 +19,8 @@ class Program :
         state = 0
         for line in lines :
             l = line.strip()
+            if (l == "") : continue
+            print ("line: " + l)
             if (state == 0) :
                 if (l == ".section .text") :
                     currAddr = memory.text[0]
@@ -51,8 +54,8 @@ class Program :
 
     def addString(self, l) :
         match = re.match(r'(\S+) (.+)', l)
-        addr = int(match[1])
-        string = match[2]
+        addr = parseint(match[1])
+        string = bytes(match[2][1:-1], 'utf-8').decode('unicode_escape')
         memory[addr] = string
                 
 

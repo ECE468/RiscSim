@@ -1,5 +1,6 @@
 from registers import registerFile
 from memory import memory
+from util import parseint
 import re
 
 #base class for instructions
@@ -66,7 +67,7 @@ class IUInstruction(UInstruction) :
 
     @UInstruction.imm.setter # pylint: disable=no-member
     def imm(self, value) :
-        new_imm = int(value)
+        new_imm = parseint(value)
         assert (new_imm < (2 ** 20)), "Immediate must be less than 2^20"
         self._imm = new_imm
 
