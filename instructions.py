@@ -14,6 +14,9 @@ class Instruction :
     def exec(self) :
         raise NotImplementedError('exec not implemented for ' + self.opcode)
 
+    def __repr__(self) :
+        return str(self)
+
 #base class for u-type instructions
 class UInstruction(Instruction) :
 
@@ -282,7 +285,7 @@ class LDInstruction(MemInstruction) :
         addr = self._calculateAddress()
 
         #perform load
-        val = self.funcExec(addr)
+        val = self.funcExec(addr, memory)
 
         #store result into register
         assert(type(val) == self.dsttype), "Value in memory not of type " + str(self.dsttype)
@@ -293,7 +296,7 @@ class LDInstruction(MemInstruction) :
 
         destReg.write(val)
 
-    def funcExec(self, addr) :
+    def funcExec(self, addr, memory) :
         return memory[addr]
 
     @property
@@ -315,9 +318,9 @@ class STInstruction(MemInstruction) :
         val = srcReg.read()
 
         #perform store
-        self.funcExec(addr, val)
+        self.funcExec(addr, val, memory)
 
-    def funcExec(self, addr, val) :
+    def funcExec(self, addr, val, memory) :
         print("updating memory location: " + hex(addr))
         memory[addr] = val
 

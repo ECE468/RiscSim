@@ -31,7 +31,7 @@ class Memory(dict) :
         assert(type(key) == int), "Can only address memory with integers"
 
         #key needs to be a multiple of 4
-        assert(key % 0x4 == 0), "Mmemory must be addressed at byte granularity"
+        assert(key % 0x4 == 0), "Memory must be addressed at byte granularity"
 
         #key needs to be in a segment
         valid = False
