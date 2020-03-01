@@ -216,7 +216,7 @@ class IInstruction(Instruction) :
 
     @classmethod
     def parse(cls, instr) :
-        match = re.match(r'(\w+) (\w+), (\w+), (\w+)', instr)
+        match = re.match(r'(\S+) (\S+), (\S+), (\S+)', instr)
         return cls(match[3], match[4], match[2], match[1])
         
     def __init__(self, src1, imm, dst, opcode) :
@@ -254,7 +254,7 @@ class MemInstruction(Instruction) :
 
     @classmethod
     def parse(cls, instr) :
-        match = re.match(r'(\w+) (\w+), (\w+)\((\w+)\)', instr)
+        match = re.match(r'(\S+) (\S+), (\S+)\((\S+)\)', instr)
         return cls(match[2], match[4], match[3], match[1])
         
     def __init__(self, reg1, reg2, imm, opcode) :
@@ -330,7 +330,7 @@ class IOInstruction(Instruction) :
 
     @classmethod
     def parse(cls, instr) :
-        match = re.match(r'(\w+) (\w+)', instr)
+        match = re.match(r'(\S+) (\S+)', instr)
         return cls(match[2], match[1])
 
     def __init__(self, reg, opcode) :
@@ -578,7 +578,6 @@ class FimmInstruction(FUInstruction) :
     def funcExec(self, imm) :
         return imm
 
-
 #move floating point to integer
 @concreteInstruction('FMOVI.S')
 class FmoviInstruction(FORInstruction) :
@@ -715,8 +714,8 @@ def testExecList() :
     registerFile['a0'].write(addr1)
     registerFile['a1'].write(addr2)
 
-    memory[0x00000000] = "Hello World"
-    registerFile['a2'].write(0x00000000)
+    memory[0x10000000] = "Hello World"
+    registerFile['a2'].write(0x10000000)
 
     insts = [
         'ADD t4, t0, t1',
