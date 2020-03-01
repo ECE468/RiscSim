@@ -6,8 +6,8 @@ class Memory(dict) :
     def __init__(self, globs = (0x20000000, 0x30000000), 
                        stack = (0x30000000, 0x40000000), 
                        heap = (0x40000000, 0x80000000), 
-                       text = (0x10000000, 0x20000000), 
-                       strings = (0x0000000, 0x10000000)) :
+                       text = (0x00000000, 0x10000000), 
+                       strings = (0x1000000, 0x20000000)) :
         super().__init__()
         self.globs = globs
         self.stack = stack
