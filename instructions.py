@@ -1,5 +1,4 @@
-from registers import registerFile
-from memory import memory
+from machine import machine
 from util import parseint
 import re
 
@@ -46,7 +45,7 @@ class UInstruction(Instruction) :
         raise NotImplementedError("Define immediate setter in derived class")
 
     def exec(self) :
-        destReg = registerFile[self.dst]
+        destReg = machine.registerFile[self.dst]
         assert destReg.type == self.dsttype, "Destination register is not " + str(self.dsttype)
 
         d = self.funcExec(self.imm)
@@ -103,13 +102,13 @@ class ORInstruction(Instruction) :
         raise NotImplementedError("Define type in the derived class!")
 
     def exec(self) :
-        src1reg = registerFile[self.src1]
+        src1reg = machine.registerFile[self.src1]
         assert src1reg.type == self.srctype, "Src 1 register is not " + str(self.srctype)
         s1 = src1reg.read()
 
         d = self.funcExec(s1)
 
-        destReg = registerFile[self.dst]    
+        destReg = machine.registerFile[self.dst]    
         assert destReg.type == self.dsttype, "Destination register is not " + str(self.dsttype)
 
         destReg.write(d)
@@ -163,17 +162,17 @@ class RInstruction(Instruction) :
         raise NotImplementedError("Define type in the derived class!")
 
     def exec(self) :
-        src1reg = registerFile[self.src1]
+        src1reg = machine.registerFile[self.src1]
         assert src1reg.type == self.srctype, "Src 1 register is not " + str(self.srctype)
         s1 = src1reg.read()
 
-        src2reg = registerFile[self.src2]
+        src2reg = machine.registerFile[self.src2]
         assert src2reg.type == self.srctype, "Src 2 register is not " + str(self.srctype)
         s2 = src2reg.read()
 
         d = self.funcExec(s1, s2)
 
-        destReg = registerFile[self.dst]    
+        destReg = machine.registerFile[self.dst]    
         assert destReg.type == self.dsttype, "Destination register is not " + str(self.dsttype)
 
         destReg.write(d)
@@ -230,12 +229,12 @@ class IInstruction(Instruction) :
         self.dst = dst
 
     def exec(self) :
-        src1reg = registerFile[self.src1]
+        src1reg = machine.registerFile[self.src1]
         assert src1reg.type == int, "Src 1 register is not an integer"
         s1 = src1reg.read()
 
         #cast imm to the type of the destination register
-        destReg = registerFile[self.dst]    
+        destReg = machine.registerFile[self.dst]    
         assert destReg.type == int, "Destination register is not an integer"
     
         imm = destReg.type(self.imm)
@@ -271,7 +270,7 @@ class MemInstruction(Instruction) :
         offset = int(self.imm)
         assert (offset < 2 ** 12), "Offset too large"
 
-        base = registerFile[self.reg2].read()
+        base = machine.registerFile[self.reg2].read()
 
         return base + offset
 
@@ -286,12 +285,12 @@ class LDInstruction(MemInstruction) :
         addr = self._calculateAddress()
 
         #perform load
-        val = self.funcExec(addr, memory)
+        val = self.funcExec(addr, machine.memory)
 
         #store result into register
         assert(type(val) == self.dsttype), "Value in memory not of type " + str(self.dsttype)
 
-        destReg = registerFile[self.reg1]
+        destReg = machine.registerFile[self.reg1]
 
         assert (destReg.type == self.dsttype), "Destination register not of type " + str(self.dsttype)
 
@@ -312,14 +311,14 @@ class STInstruction(MemInstruction) :
         addr = self._calculateAddress()
 
         #get value from register
-        srcReg = registerFile[self.reg1]
+        srcReg = machine.registerFile[self.reg1]
 
         assert (srcReg.type == self.srctype), "Source register not of type " + str(self.srctype)
 
         val = srcReg.read()
 
         #perform store
-        self.funcExec(addr, val, memory)
+        self.funcExec(addr, val, machine.memory)
 
     def funcExec(self, addr, val, memory) :
         print("updating memory location: " + hex(addr))
@@ -348,7 +347,7 @@ class IOInstruction(Instruction) :
 class InputInstruction(IOInstruction) :
 
     def exec(self) :
-        dstreg = registerFile[self.reg]
+        dstreg = machine.registerFile[self.reg]
         assert dstreg.type == self.dsttype, "Reading into register of type " + str(dstreg.type) + " when expecting " + str(self.dsttype)
 
         val = self.funcExec()
@@ -366,7 +365,7 @@ class InputInstruction(IOInstruction) :
 class OutputInstruction(IOInstruction) :
 
     def exec(self) :
-        srcreg = registerFile[self.reg]
+        srcreg = machine.registerFile[self.reg]
         assert srcreg.type == self.srctype, "Writing register of type " + str(srcreg.type) + " when expecting " + str(self.srctype)
 
         val = srcreg.read()
@@ -635,10 +634,10 @@ class PutsInstruction(IOInstruction) :
         self.opcode = opcode
 
     def exec(self) :
-        addr = registerFile[self.reg].read()
-        assert (addr >= memory.strings[0] and addr < memory.strings[1]), "Writing string from a bad address"
+        addr = machine.registerFile[self.reg].read()
+        assert (addr >= machine.memory.strings[0] and addr < machine.memory.strings[1]), "Writing string from a bad address"
 
-        print(memory[addr])
+        print(machine.memory[addr])
         
 
 #### unimplemented instructions ####
@@ -694,32 +693,32 @@ def parseInstruction(inst) :
 ####### Test #######
 
 def testAdd() :
-    registerFile['t0'].write(3)
-    registerFile['t1'].write(4)
-    print(registerFile['t2'])
+    machine.registerFile['t0'].write(3)
+    machine.registerFile['t1'].write(4)
+    print(machine.registerFile['t2'])
     # inst1 = AddInstruction(src1 = 't0', src2 = 't1', dst = 't2', opcode = 'ADD')
     inst1 = parseInstruction("ADD t2, t0, t1")
     print(inst1)
     inst1.exec()
-    print(registerFile['t2'])
+    print(machine.registerFile['t2'])
 
 def testParse() :
     inst = parseInstruction("  ADD t2, t0, t1 ")
     print(inst)
 
 def testExecList() :
-    registerFile['t0'].write(3)
-    registerFile['t1'].write(4)
-    registerFile['t2'].write(5)
-    registerFile['t3'].write(6)
+    machine.registerFile['t0'].write(3)
+    machine.registerFile['t1'].write(4)
+    machine.registerFile['t2'].write(5)
+    machine.registerFile['t3'].write(6)
 
     addr1 = 0x40000000
     addr2 = 0x40000004
-    registerFile['a0'].write(addr1)
-    registerFile['a1'].write(addr2)
+    machine.registerFile['a0'].write(addr1)
+    machine.registerFile['a1'].write(addr2)
 
-    memory[0x10000000] = "Hello World"
-    registerFile['a2'].write(0x10000000)
+    machine.memory[0x10000000] = "Hello World"
+    machine.registerFile['a2'].write(0x10000000)
 
     insts = [
         'ADD t4, t0, t1',
@@ -746,21 +745,21 @@ def testExecList() :
         print(o)
         o.exec()
 
-    print(registerFile['t4'])
-    print(registerFile['t5'])
-    print(registerFile['t6'])
-    print(registerFile['t7'])
-    print(registerFile['t8'])
-    print(registerFile['f1'])
-    print(registerFile['f2'])
-    print(registerFile['f3'])  
-    print(registerFile['t10'])  
+    print(machine.registerFile['t4'])
+    print(machine.registerFile['t5'])
+    print(machine.registerFile['t6'])
+    print(machine.registerFile['t7'])
+    print(machine.registerFile['t8'])
+    print(machine.registerFile['f1'])
+    print(machine.registerFile['f2'])
+    print(machine.registerFile['f3'])  
+    print(machine.registerFile['t10'])  
 
-    print("Memory at " + hex(addr1) + ": " + str(memory[addr1]))
-    print("Memory at " + hex(addr2) + ": " + str(memory[addr2]))
+    print("Memory at " + hex(addr1) + ": " + str(machine.memory[addr1]))
+    print("Memory at " + hex(addr2) + ": " + str(machine.memory[addr2]))
 
-    print(registerFile['t11'])  
-    print(registerFile['f4'])  
+    print(machine.registerFile['t11'])  
+    print(machine.registerFile['f4'])  
 
 
 if __name__ == '__main__' :

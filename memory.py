@@ -40,10 +40,11 @@ class Memory(dict) :
                 valid = True
         assert valid == True, "Address not in a mapped segment"
 
-memory = Memory()        
-
 
 if __name__ == '__main__' :
+
+    memory = Memory()        
+    
     memory[0x20100000] = 80
     print(memory[0x20100000])
     print(memory[0x10100004]) #should fail
