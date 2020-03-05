@@ -1,17 +1,24 @@
 from machine import machine
 from util import parseint
 import re
+import timingmodel
 
 #base class for instructions
 class Instruction :
-    def __init__(self, opcode) :
+    def __init__(self, opcode, timingModel = timingmodel.defaultTimingModel) :
         self.opcode = opcode #name of opcode
+        self.timingModel = timingModel
+
+    #execute the instruction, including timing
+    def exec(self) :
+        self.timingModel.time(self)
+        self.internalExec()
 
     #execute the instruction, including updating memory/registers as necessary
     #assumption: exec does not check dependences. This will be checked at other phases in the code
     #could simply schedule code for execution, rather than directly executing it
     #TODO: extend these to handle different timing models -- move the basic exec code into a "simpleExec" function instead
-    def exec(self) :
+    def internalExec(self) :
         raise NotImplementedError('exec not implemented for ' + self.opcode)
 
     def __repr__(self) :
