@@ -468,7 +468,7 @@ class AndiInstruction(IInstruction) :
     def funcExec(self, s1, imm) :
         return s1 & imm
 
-@concreteInstruction('OR')
+@concreteInstruction('ORI')
 class OriInstruction(IInstruction) :
     def funcExec(self, s1, imm) :
         return s1 | imm
