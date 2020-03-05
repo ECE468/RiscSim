@@ -2,6 +2,7 @@ from instructions import parseInstruction
 import re
 from machine import machine
 from util import parseint
+import timingmodel
 
 class Program :
     def __init__(self) :
@@ -65,9 +66,13 @@ if __name__ == '__main__' :
     p.buildCodeFromFile('testFile.asm')
     print(p.code)
 
+    machine.timingModel = timingmodel.basicTimingModel()
+
     #bad test -- need to build machine simulator
     pc = 0
     while (pc in p.code) :
         print (p.code[pc])
         p.code[pc].exec()
         pc += 4
+
+    print(machine.timingModel.getTotalTime())

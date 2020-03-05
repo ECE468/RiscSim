@@ -5,20 +5,14 @@ import timingmodel
 
 #base class for instructions
 class Instruction :
-    def __init__(self, opcode, timingModel = timingmodel.defaultTimingModel) :
+    def __init__(self, opcode) :
         self.opcode = opcode #name of opcode
-        self.timingModel = timingModel
-
-    #execute the instruction, including timing
-    def exec(self) :
-        self.timingModel.time(self)
-        self.internalExec()
 
     #execute the instruction, including updating memory/registers as necessary
     #assumption: exec does not check dependences. This will be checked at other phases in the code
     #could simply schedule code for execution, rather than directly executing it
     #TODO: extend these to handle different timing models -- move the basic exec code into a "simpleExec" function instead
-    def internalExec(self) :
+    def exec(self) :
         raise NotImplementedError('exec not implemented for ' + self.opcode)
 
     def __repr__(self) :
@@ -52,6 +46,7 @@ class UInstruction(Instruction) :
         raise NotImplementedError("Define immediate setter in derived class")
 
     def exec(self) :
+        machine.timingModel.exec(self)
         destReg = machine.registerFile[self.dst]
         assert destReg.type == self.dsttype, "Destination register is not " + str(self.dsttype)
 
@@ -109,6 +104,7 @@ class ORInstruction(Instruction) :
         raise NotImplementedError("Define type in the derived class!")
 
     def exec(self) :
+        machine.timingModel.exec(self)
         src1reg = machine.registerFile[self.src1]
         assert src1reg.type == self.srctype, "Src 1 register is not " + str(self.srctype)
         s1 = src1reg.read()
@@ -169,6 +165,7 @@ class RInstruction(Instruction) :
         raise NotImplementedError("Define type in the derived class!")
 
     def exec(self) :
+        machine.timingModel.exec(self)
         src1reg = machine.registerFile[self.src1]
         assert src1reg.type == self.srctype, "Src 1 register is not " + str(self.srctype)
         s1 = src1reg.read()
@@ -236,6 +233,7 @@ class IInstruction(Instruction) :
         self.dst = dst
 
     def exec(self) :
+        machine.timingModel.exec(inst = self)
         src1reg = machine.registerFile[self.src1]
         assert src1reg.type == int, "Src 1 register is not an integer"
         s1 = src1reg.read()
@@ -303,6 +301,8 @@ class LDInstruction(MemInstruction) :
 
         destReg.write(val)
 
+        machine.timingModel.cacheExec(self.opcode, addr)
+
     def funcExec(self, addr, memory) :
         return memory[addr]
 
@@ -326,6 +326,8 @@ class STInstruction(MemInstruction) :
 
         #perform store
         self.funcExec(addr, val, machine.memory)
+
+        machine.timingModel.cacheExec(self.opcode, addr)
 
     def funcExec(self, addr, val, memory) :
         print("updating memory location: " + hex(addr))
@@ -394,6 +396,7 @@ opCodeMap = {}
 #decorator for concrete instructions to set up opcode map
 
 class concreteInstruction :
+
     def __init__(self, opcode) :
         self.opcode = opcode
 

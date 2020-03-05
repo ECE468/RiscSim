@@ -1,14 +1,18 @@
 from memory import Memory
 from registers import IRegister
 from registers import FRegister
+import timingmodel
 
 class Machine :
-    def __init__(self, numIntRegisters = 32, numFloatRegisters = 32) :
+    def __init__(self, numIntRegisters = 32, numFloatRegisters = 32, timingModel = timingmodel.defaultTimingModel) :
         self.memory = Memory()
+        
         self.registerFile = {}
         self.numIntRegisters = numIntRegisters
         self.numFloatRegisters = numFloatRegisters
         self.__createRegisterFile()
+
+        self.timingModel = timingModel()
 
     def __createRegisterFile(self) :
         #initialize integer registers
