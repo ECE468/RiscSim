@@ -473,7 +473,7 @@ class OriInstruction(IInstruction) :
     def funcExec(self, s1, imm) :
         return s1 | imm
 
-@concreteInstruction('XOR')
+@concreteInstruction('XORI')
 class XoriInstruction(IInstruction) :
     def funcExec(self, s1, imm) :
         return s1 ^ imm
