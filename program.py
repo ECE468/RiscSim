@@ -1,8 +1,8 @@
-from instructions import parseInstruction
+import instructions
 import re
-from machine import machine
 from util import parseint
 import timingmodel
+import config
 
 class Program :
     def __init__(self) :
@@ -24,11 +24,11 @@ class Program :
             print ("line: " + l)
             if (state == 0) :
                 if (l == ".section .text") :
-                    currAddr = machine.memory.text[0]
+                    currAddr = config.machine.memory.text[0]
                     state = 1
             elif (state == 1) :
                 if (l == ".section .strings") :
-                    currAddr = machine.memory.strings[0]
+                    currAddr = config.machine.memory.strings[0]
                     state = 2
                 else :                    
                     currAddr = self.addInstr(l, currAddr)
@@ -49,7 +49,8 @@ class Program :
             return addr
         else :
             #otherwise parse the instruction and add it to the list
-            inst = parseInstruction(l)
+            inst = instructions.parseInstruction(l)
+            print ("Adding instruction: " + inst.opcode + " at address " + str(addr))
             self.code[addr] = inst
             return addr + 4
 
@@ -57,7 +58,7 @@ class Program :
         match = re.match(r'(\S+) (.+)', l)
         addr = parseint(match[1])
         string = bytes(match[2][1:-1], 'utf-8').decode('unicode_escape')
-        machine.memory[addr] = string
+        config.machine.memory[addr] = string
                 
 
 ### TEST ###
@@ -66,7 +67,9 @@ if __name__ == '__main__' :
     p.buildCodeFromFile('testFile.asm')
     print(p.code)
 
-    machine.timingModel = timingmodel.basicTimingModel()
+    config.machine.timingModel = timingmodel.basicTimingModel()
+
+    print (p.labels)
 
     #bad test -- need to build machine simulator
     pc = 0
@@ -75,4 +78,4 @@ if __name__ == '__main__' :
         p.code[pc].exec()
         pc += 4
 
-    print(machine.timingModel.getTotalTime())
+    print(config.machine.timingModel.getTotalTime())

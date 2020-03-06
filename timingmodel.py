@@ -49,6 +49,7 @@ class basicTimingModel(defaultTimingModel) :
         self.timingMap['FIMM.S'] = 2
         self.timingMap['FMOVI.S'] = 4
         self.timingMap['IMOVF.S'] = 4
+        self.timingMap['HALT'] = 0
 
 
 

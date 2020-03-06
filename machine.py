@@ -2,6 +2,8 @@ from memory import Memory
 from registers import IRegister
 from registers import FRegister
 import timingmodel
+import program
+import config
 
 class Machine :
     def __init__(self, numIntRegisters = 32, numFloatRegisters = 32, timingModel = timingmodel.defaultTimingModel) :
@@ -13,6 +15,12 @@ class Machine :
         self.__createRegisterFile()
 
         self.timingModel = timingModel()
+        print(self.timingModel)
+
+        self.prog = None
+
+        self.pc = self.memory.text[0]
+        self.registerFile['sp'].write(self.memory.stack.text[1] - 4) #initialize the stack pointer
 
     def __createRegisterFile(self) :
         #initialize integer registers
@@ -84,4 +92,21 @@ class Machine :
         for f in range(self.numFloatRegisters - 32) :
             self.registerFile['ft' + str(12 + f)] = self.registerFile['f' + str(32 + f)]
 
-machine = Machine(numIntRegisters = 64, numFloatRegisters = 64)
+    def execProgram(self, p) :
+        self.prog = p
+        self.pc = self.memory.text[0]
+        while (self.pc != -1) :
+            print(self.pc)
+            inst = p.code[self.pc]
+            inst.exec()
+        
+
+# machine = Machine(numIntRegisters = 64, numFloatRegisters = 64)
+
+#### TEST ####
+
+if __name__ == '__main__' :
+    p = program.Program()
+    p.buildCodeFromFile('testFile.asm')
+
+    config.machine.execProgram(p)

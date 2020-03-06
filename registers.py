@@ -12,9 +12,12 @@ class Register :
         return self.value
 
     def write(self, value) :
-        if (type(value) != self.type) :
+        if (self.name == 'x0') :
+            pass
+        elif (type(value) != self.type) :
             raise(TypeError('Writing data of type ' + str(type(value)) + ' to register ' + self.name + ' which holds type ' + str(self.type)))
-        self.value = value
+        else :
+            self.value = value
 
     def __repr__(self) :
         return 'Register ' + self.name
