@@ -20,7 +20,7 @@ class Machine :
         self.prog = None
 
         self.pc = self.memory.text[0]
-        self.registerFile['sp'].write(self.memory.stack.text[1] - 4) #initialize the stack pointer
+        self.registerFile['sp'].write(self.memory.text[1] - 4) #initialize the stack pointer
 
     def __createRegisterFile(self) :
         #initialize integer registers
