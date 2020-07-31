@@ -84,6 +84,17 @@ class FUInstruction(UInstruction) :
     def imm(self, value) :
         new_imm = float(value)
         self._imm = new_imm
+        
+#base class for magic integer immediate instruction
+class MIUInstruction(UInstruction) :
+    @property
+    def dsttype(self) :
+        return int
+        
+    @UInstruction.imm.setter # pylint: disable=no-member
+    def imm(self, value) :
+        new_imm = parseint(value)
+        self._imm = new_imm 
 
 #base class for 2-operand r-type instructions
 class ORInstruction(Instruction) :
@@ -476,7 +487,7 @@ class JalInstruction(Instruction) :
     @classmethod
     def parse(cls, instr) :
         #JAL reg, label
-        match = re.match(r'(\S+) (\S+), (\S+)')
+        match = re.match(r'(\S+) (\S+), (\S+)', instr)
         return cls(match[1], match[2], match[3])
 
     def __init__(self, opcode, reg, label) :
@@ -797,6 +808,12 @@ class BneInstruction(BranchInstruction) :
         return True if val1 != val2 else False
 
 #### Custom instructions -- not actually part of RISC-V instruction set ####
+
+#store integer immediate (e.g., address) to register
+@concreteInstruction('LI')
+class LiInstruction(MIUnstruction) :
+    def funcExec(self, imm) :
+        return imm
 
 #store FP immediate to register
 @concreteInstruction('FIMM.S')
