@@ -271,6 +271,7 @@ class IInstruction(Instruction) :
         raise NotImplementedError("funcExec not implemented for i-type instruction " + self.opcode)
 
     def __str__(self) :
+        print("here")
         return str(self.opcode + " " + self.dst + " " + self.src1 + " " + self.imm)
 
 #base class for memory instruction
@@ -464,6 +465,9 @@ class BranchInstruction(Instruction) :
 
     def funcExec(self, val1, val2) :
         raise NotImplementedError("Implement funcExec in derived class")
+        
+    def __str__(self) :
+        return str(self.opcode + " " + self.src1 + " " + self.src2 + " " + self.label);
 
 ###### Instructions ######
 
@@ -811,13 +815,13 @@ class BneInstruction(BranchInstruction) :
 
 #Load address to register
 @concreteInstruction('LA')
-class LaInstruction(MIUnstruction) :
+class LaInstruction(MIUInstruction) :
     def funcExec(self, imm) :
         return imm
         
 #Load immediate to register -- same as la
 @concreteInstruction('LI')
-class LiInstruction(MIUnstruction) :
+class LiInstruction(MIUInstruction) :
     def funcExec(self, imm) :
         return imm        
 

@@ -20,7 +20,7 @@ class Program :
         state = 0
         for line in lines :
             l = line.strip()
-            if (l == "") : continue
+            if ((l == "")) : continue
             print ("line: " + l)
             if (state == 0) :
                 if (l == ".section .text") :
