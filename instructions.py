@@ -809,9 +809,9 @@ class BneInstruction(BranchInstruction) :
 
 #### Custom instructions -- not actually part of RISC-V instruction set ####
 
-#store integer immediate (e.g., address) to register
-@concreteInstruction('LI')
-class LiInstruction(MIUnstruction) :
+#Load address to register
+@concreteInstruction('LA')
+class LaInstruction(MIUnstruction) :
     def funcExec(self, imm) :
         return imm
 
