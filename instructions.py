@@ -814,6 +814,12 @@ class BneInstruction(BranchInstruction) :
 class LaInstruction(MIUnstruction) :
     def funcExec(self, imm) :
         return imm
+        
+#Load immediate to register -- same as la
+@concreteInstruction('LI')
+class LiInstruction(MIUnstruction) :
+    def funcExec(self, imm) :
+        return imm        
 
 #store FP immediate to register
 @concreteInstruction('FIMM.S')
