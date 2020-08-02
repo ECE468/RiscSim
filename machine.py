@@ -15,7 +15,7 @@ class Machine :
         self.__createRegisterFile()
 
         self.timingModel = timingModel()
-        print(self.timingModel)
+        # print(self.timingModel)
 
         self.prog = None
 
@@ -96,7 +96,7 @@ class Machine :
         self.prog = p
         self.pc = self.memory.text[0]
         while (self.pc != -1) :
-            print(self.pc)
+            # print(self.pc)
             inst = p.code[self.pc]
             inst.exec()
         

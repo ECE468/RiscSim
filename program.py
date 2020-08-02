@@ -21,7 +21,7 @@ class Program :
         for line in lines :
             l = line.strip()
             if ((l == "")) : continue
-            print ("line: " + l)
+            # print ("line: " + l)
             if (state == 0) :
                 if (l == ".section .text") :
                     currAddr = config.machine.memory.text[0]
@@ -50,7 +50,7 @@ class Program :
         else :
             #otherwise parse the instruction and add it to the list
             inst = instructions.parseInstruction(l)
-            print ("Adding instruction: " + inst.opcode + " at address " + str(addr))
+            # print ("Adding instruction: " + inst.opcode + " at address " + str(addr))
             self.code[addr] = inst
             return addr + 4
 

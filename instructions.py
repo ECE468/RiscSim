@@ -23,7 +23,7 @@ class UInstruction(Instruction) :
 
     @classmethod
     def parse(cls, instr) :
-        print(instr)
+        # print(instr)
         match = re.match(r'(\S+) (\S+), (\S+)', instr)
         return cls(match[2], match[3], match[1])
 
@@ -271,7 +271,7 @@ class IInstruction(Instruction) :
         raise NotImplementedError("funcExec not implemented for i-type instruction " + self.opcode)
 
     def __str__(self) :
-        print("here")
+        # print("here")
         return str(self.opcode + " " + self.dst + " " + self.src1 + " " + self.imm)
 
 #base class for memory instruction
@@ -354,7 +354,7 @@ class STInstruction(MemInstruction) :
         config.machine.pc += 4
 
     def funcExec(self, addr, val, memory) :
-        print("updating memory location: " + hex(addr))
+        # print("updating memory location: " + hex(addr))
         memory[addr] = val
 
     @property
@@ -562,7 +562,7 @@ class JInstruction(ImmControlInstruction) :
     
     def __init__(self, opcode, label) :
         super().__init__(opcode, label)
-        print(JalInstruction)
+        # print(JalInstruction)
         self._jal = JalInstruction('JAL', 'x0', self.label)
 
     def exec(self) :
