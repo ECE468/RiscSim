@@ -6,7 +6,7 @@ import program
 import config
 
 class Machine :
-    def __init__(self, numIntRegisters = 256, numFloatRegisters = 256, timingModel = timingmodel.defaultTimingModel) :
+    def __init__(self, numIntRegisters = 32, numFloatRegisters = 32, timingModel = timingmodel.defaultTimingModel) :
         self.memory = Memory()
         
         self.registerFile = {}
