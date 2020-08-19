@@ -71,7 +71,7 @@ class IUInstruction(UInstruction) :
     @UInstruction.imm.setter # pylint: disable=no-member
     def imm(self, value) :
         new_imm = parseint(value)
-        assert (new_imm < (2 ** 20)), "Immediate must be less than 2^20"
+        assert (new_imm < (2 ** 19 - 1) and new_imm > (-1 * 2 ** 19)), "Immediate must fit in 20 bits"
         self._imm = new_imm
 
 #base class for u-type instruction with float immediate
@@ -260,7 +260,7 @@ class IInstruction(Instruction) :
         assert destReg.type == int, "Destination register is not an integer"
     
         imm = destReg.type(self.imm)
-        assert (imm < (2 ** 12)), "Immediate value is too large; must fit in 12 bits"
+        assert (imm < (2 ** 11 - 1) and imm > (-1 * 2 ** 11)), "Immediate value is too large; must fit in 12 bits"
 
         d = self.funcExec(s1, imm)
         destReg.write(d)
@@ -523,7 +523,7 @@ class JalrInstruction(IInstruction) :
         assert destReg.type == int, "Destination register is not an integer"
     
         imm = destReg.type(self.imm)
-        assert (imm < (2 ** 12)), "Immediate value is too large; must fit in 12 bits"
+        assert (imm < (2 ** 11 - 1) and imm > (-1 * 2 ** 11)), "Immediate value is too large; must fit in 12 bits"
 
         destReg.write(config.machine.pc + 4)
 
