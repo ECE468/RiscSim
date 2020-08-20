@@ -300,7 +300,7 @@ class MemInstruction(Instruction) :
         return base + offset
 
     def __str__(self) :
-        return str(self.opcode + " " + self.reg2 + " " + self.imm + "(" + self.reg1 + ")")
+        return str(self.opcode + " " + self.reg1 + " " + self.imm + "(" + self.reg2 + ")")
     
 #base class for int/fp loads
 class LDInstruction(MemInstruction) :
