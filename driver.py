@@ -16,7 +16,7 @@ if __name__ == '__main__' :
         print("Initializing machine with " + sys.argv[2] + " registers")
         config.machine = machine.Machine(numIntRegisters = int(sys.argv[2]), numFloatRegisters = int(sys.argv[2]), timingModel = timingmodel.basicTimingModel)
     else :
-        print("Using default machine configuration with 32 registers")
+        print("Using default machine configuration with 256 registers")
             
     p = program.Program()
     p.buildCodeFromFile(sys.argv[1])
