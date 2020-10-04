@@ -1,6 +1,7 @@
 from memory import Memory
 from registers import IRegister
 from registers import FRegister
+from memorymanager import MemoryManager
 import timingmodel
 import program
 import config
@@ -13,6 +14,9 @@ class Machine :
         self.numIntRegisters = numIntRegisters
         self.numFloatRegisters = numFloatRegisters
         self.__createRegisterFile()
+
+        self.memoryManager = MemoryManager(self.memory.heap[0], self.memory.heap[1] - self.memory.heap[0])
+        # print("Memory allocator " + str(self.memoryManager))
 
         self.timingModel = timingModel()
         # print(self.timingModel)
