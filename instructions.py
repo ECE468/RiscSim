@@ -905,6 +905,67 @@ class HaltInstruction(Instruction) :
     def __str__(self) :
         return self.opcode
 
+@concreteInstruction('MALLOC')
+class MallocInstruction(Instruction) :
+
+    @classmethod
+    def parse(cls, inst) :
+        match = re.match(r'(\S+) (\S+), (\S+)', inst)
+        return cls(match[2], match[3], match[1])
+
+    def __init__(self, dstReg, sizeReg, opcode) :
+        self.dstReg = dstReg
+        self.sizeReg = sizeReg
+        self.opcode = opcode
+
+    def exec(self) :
+
+        config.machine.timingModel.exec(self)
+
+        sizeReg = config.machine.registerFile[self.sizeReg]
+        assert sizeReg.type == int, "Size register is not an integer"
+
+        size = sizeReg.read()
+
+        #call the memory allocator to allocate sizeReg amount of space
+        addr = config.machine.memoryManager.malloc(size)
+
+        destReg = config.machine.registerFile[self.dstReg]
+        assert destReg.type == int, "Address not being stored in integer reg"
+
+        config.machine.registerFile[self.dstReg].write(addr)
+
+        config.machine.pc += 4
+
+    def __str__(self) :
+        return str(self.opcode + " " + self.dstReg + " " + self.sizeReg)
+
+@concreteInstruction('FREE')
+class FreeInstruction(Instruction) :
+
+    @classmethod
+    def parse(cls, inst) :
+        match = re.match(r'(\S+) (\S+)', inst)
+        return cls(match[2], match[1])
+
+    def __init__(self, addrReg, opcode) :
+        self.addrReg = addrReg
+        self.opcode = opcode
+    
+    def exec(self) :
+
+        config.machine.timingModel.exec(self)
+
+        addrReg = config.machine.registerFile[self.addrReg]
+        assert addrReg.type == int, "address needs to be an integer reg"
+
+        addr = addrReg.read()
+
+        #call the memory allocator to release the address
+        config.machine.memoryManager.free(addr)
+
+        config.machine.pc += 4
+
 #### unimplemented instructions ####
 @concreteInstruction('AUIPC')
 class AuipcInstruction(IUInstruction) :
