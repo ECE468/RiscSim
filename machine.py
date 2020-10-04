@@ -93,12 +93,15 @@ class Machine :
             self.registerFile['ft' + str(12 + f)] = self.registerFile['f' + str(32 + f)]
 
     def execProgram(self, p) :
+
         self.prog = p
         self.pc = self.memory.text[0]
         while (self.pc != -1) :
             # print(self.pc)
             inst = p.code[self.pc]
             inst.exec()
+
+        print("Execution time: " + self.timingModel.getTotalTime() + " cycles")
         
 
 # machine = Machine(numIntRegisters = 64, numFloatRegisters = 64)
