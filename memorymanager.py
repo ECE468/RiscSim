@@ -7,14 +7,20 @@ class MemoryManager :
         self.allocatedBlocks = {}
 
     def malloc(self, size) :
+        #print("DEBUG: Allocating " + str(size) + " bytes")
         bl = self.freeList.getBlock(size)
         self.allocatedBlocks[bl[0]] = bl[1]
+        #print("DEBUG: allocated into " + str(bl[0]))
+        #print(self)
         return bl[0]
 
     def free(self, addr) :
-        if (addr not in self.allocatedBlocks) :
-            raise RuntimeError("Freeing a block at address " + str(addr) + " that has not been allocated")
+        #print("DEBUG: Freeing " + str(addr))
+        assert addr in self.allocatedBlocks, "Freeing a block at address " + str(addr) + " that has not been allocated"
         self.freeList.releaseBlock(addr, self.allocatedBlocks[addr])
+        del self.allocatedBlocks[addr]
+
+        #print(self)
 
     def __str__(self) :
         return "Allocated Blocks: " + str(self.allocatedBlocks) + "\nFree list: " + str(self.freeList)
