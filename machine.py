@@ -101,7 +101,7 @@ class Machine :
             inst = p.code[self.pc]
             inst.exec()
 
-        print("Execution time: " + self.timingModel.getTotalTime() + " cycles")
+        print("Execution time: " + str(self.timingModel.getTotalTime()) + " cycles")
         
 
 # machine = Machine(numIntRegisters = 64, numFloatRegisters = 64)
