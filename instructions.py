@@ -930,6 +930,8 @@ class MallocInstruction(Instruction) :
         #call the memory allocator to allocate sizeReg amount of space
         addr = config.machine.memoryManager.malloc(size)
 
+        # print("Allocated at address " + str(addr));
+
         destReg = config.machine.registerFile[self.dstReg]
         assert destReg.type == int, "Address not being stored in integer reg"
 
@@ -960,6 +962,8 @@ class FreeInstruction(Instruction) :
         assert addrReg.type == int, "address needs to be an integer reg"
 
         addr = addrReg.read()
+
+        # print("Freeing address " + str(addr));
 
         #call the memory allocator to release the address
         config.machine.memoryManager.free(addr)

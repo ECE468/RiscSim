@@ -101,8 +101,9 @@ class Machine :
         self.prog = p
         self.pc = self.memory.text[0]
         while (self.pc != -1) :
-            # print(self.pc)
+            # print(self.pc) #UNCOMMENT TO DEBUG BY PRINTING PC VALUE
             inst = p.code[self.pc]
+            # print(inst) #UNCOMMENT TO DEBUG BY PRINTING INSTRUCTION TRACE
             inst.exec()
 
         print("Execution time: " + str(self.timingModel.getTotalTime()) + " cycles")
