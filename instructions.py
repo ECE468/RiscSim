@@ -838,7 +838,7 @@ class FmoviInstruction(FORInstruction) :
         return int(src1)
 
     @property
-    def dsttype(self) :
+    def srctype(self) :
         return float
 
 #move integer to floating point
@@ -848,7 +848,7 @@ class ImovfInstruction(FORInstruction) :
         return float(src1)
 
     @property
-    def srctype(self) :
+    def dsttype(self) :
         return float
 
 #read integer from stdin
