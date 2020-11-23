@@ -970,6 +970,9 @@ class FreeInstruction(Instruction) :
 
         config.machine.pc += 4
 
+    def __str__(self) :
+        return str(self.opcode + " " + self.addrReg)
+
 #### unimplemented instructions ####
 @concreteInstruction('AUIPC')
 class AuipcInstruction(IUInstruction) :
