@@ -3,10 +3,10 @@ class Memory(dict) :
     #IMPORTANT: memory is not byte addressable -- can only be addressed at word granularity -- means we do not have to actually manage byte mapping
     #           and we don't have to worry about endianness
     #IMPORTANT: we do not actually allow reading/writing to the text space, but Memory keeps track of the address range since it's part of the memory configuration
-    def __init__(self, globs = (0x20000000, 0x30000000), 
-                       stack = (0x30000000, 0x40000000), 
-                       heap = (0x40000000, 0x80000000), 
-                       text = (0x00000000, 0x10000000), 
+    def __init__(self, globs = (0x20000000, 0x30000000),
+                       stack = (0x30000000, 0x40000000),
+                       heap = (0x40000000, 0x80000000),
+                       text = (0x00000000, 0x10000000),
                        strings = (0x1000000, 0x20000000)) :
         super().__init__()
         self.globs = globs
@@ -14,13 +14,17 @@ class Memory(dict) :
         self.heap = heap
         self.text = text
         self.strings = strings
+        self.r_count = 0
+        self.w_count = 0
 
     def __getitem__(self, key) :
         self.__validateAddress(key)
+        self.r_count += 1
         return super().__getitem__(key)
 
     def __setitem__(self, key, value) :
         self.__validateAddress(key)
+        self.w_count += 1
         super().__setitem__(key, value)
 
     def __missing__(self, key) :
@@ -40,11 +44,14 @@ class Memory(dict) :
                 valid = True
         assert valid == True, "Address not in a mapped segment"
 
+    def getAccessCounts(self):
+        return (self.r_count, self.w_count, self.r_count + self.w_count)
+
 
 if __name__ == '__main__' :
 
-    memory = Memory()        
-    
+    memory = Memory()
+
     memory[0x20100000] = 80
     print(memory[0x20100000])
     print(memory[0x10100004]) #should fail

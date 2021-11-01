@@ -9,7 +9,7 @@ import config
 class Machine :
     def __init__(self, numIntRegisters = 32, numFloatRegisters = 32, timingModel = timingmodel.defaultTimingModel) :
         self.memory = Memory()
-        
+
         self.registerFile = {}
         self.numIntRegisters = numIntRegisters
         self.numFloatRegisters = numFloatRegisters
@@ -74,7 +74,7 @@ class Machine :
         #initialize floating point registers
         for f in range(self.numFloatRegisters) :
             name = 'f' + str(f)
-            self.registerFile[name] = FRegister(name)    
+            self.registerFile[name] = FRegister(name)
 
         #standard floating point register aliases
         for i in range(0, 8) :
@@ -96,7 +96,7 @@ class Machine :
         for f in range(self.numFloatRegisters - 32) :
             self.registerFile['ft' + str(12 + f)] = self.registerFile['f' + str(32 + f)]
 
-    def execProgram(self, p) :
+    def execProgram(self, p, showMemoryStats=False) :
 
         self.prog = p
         self.pc = self.memory.text[0]
@@ -107,7 +107,9 @@ class Machine :
             inst.exec()
 
         print("Execution time: " + str(self.timingModel.getTotalTime()) + " cycles")
-        
+        if showMemoryStats:
+            print("Memory usage: {} reads, {} writes; {} total".format(*self.memory.getAccessCounts()))
+
 
 # machine = Machine(numIntRegisters = 64, numFloatRegisters = 64)
 
