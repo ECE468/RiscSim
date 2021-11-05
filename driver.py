@@ -22,7 +22,7 @@ if __name__ == '__main__' :
         if int(args.nregs) < 32 :
             print("Cannot initialize simulator with fewer than 32 registers")
             sys.exit(1)
-        print("Initializing machine with " + sys.argv[2] + " registers")
+        print("Initializing machine with " + args.nregs + " registers")
         config.machine = machine.Machine(numIntRegisters = int(args.nregs), numFloatRegisters = int(args.nregs), timingModel = timingmodel.basicTimingModel)
     else :
         print("Using default machine configuration with 256 registers")
