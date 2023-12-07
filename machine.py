@@ -6,6 +6,8 @@ import timingmodel
 import program
 import config
 
+
+
 class Machine :
     def __init__(self, numIntRegisters = 32, numFloatRegisters = 32, timingModel = timingmodel.defaultTimingModel) :
         self.memory = Memory()
@@ -96,14 +98,16 @@ class Machine :
         for f in range(self.numFloatRegisters - 32) :
             self.registerFile['ft' + str(12 + f)] = self.registerFile['f' + str(32 + f)]
 
-    def execProgram(self, p, showMemoryStats=False) :
+    def execProgram(self, p, showMemoryStats=False, useDebug=False) :
 
         self.prog = p
         self.pc = self.memory.text[0]
         while (self.pc != -1) :
-            # print(self.pc) #UNCOMMENT TO DEBUG BY PRINTING PC VALUE
+            if (useDebug):
+                print(self.pc) #UNCOMMENT TO DEBUG BY PRINTING PC VALUE
             inst = p.code[self.pc]
-            # print(inst) #UNCOMMENT TO DEBUG BY PRINTING INSTRUCTION TRACE
+            if (useDebug):
+                print(inst) #UNCOMMENT TO DEBUG BY PRINTING INSTRUCTION TRACE
             inst.exec()
 
         print("Execution time: " + str(self.timingModel.getTotalTime()) + " cycles")

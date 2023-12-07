@@ -10,11 +10,12 @@ import argparse
 
 if __name__ == '__main__' :
 
-    parser = argparse.ArgumentParser("Simulate RISC-V execution")
+    parser = argparse.ArgumentParser("Simulate RISC-V execution",add_help=True)
     parser.add_argument("-m", dest="memuse", action="store_true", default=False,
                         help="show memory usage")
     parser.add_argument("asm", help="assembly file to simulate")
     parser.add_argument("nregs", nargs="?", help="number of registers to simulate")
+    parser.add_argument("-d",dest="use_debug", help="set to 1 to print assembly lines as they are being executed")
 
     args = parser.parse_args()
 
@@ -30,4 +31,4 @@ if __name__ == '__main__' :
     p = program.Program()
     p.buildCodeFromFile(args.asm)
 
-    config.machine.execProgram(p, args.memuse)
+    config.machine.execProgram(p, args.memuse, useDebug=args.use_debug)
